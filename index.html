@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>vcraft.sg</title>
+        <style>
+            :root {
+                --bg: #0b0f14;
+                --panel: #0e141b;
+                --text: #e6edf3;
+                --muted: #9fb0c0;
+                --caret: #86e1ff;
+                --mono:
+                    ui-monospace, SFMono-Regular, Menlo, Monaco,
+                    "Cascadia Mono", "Segoe UI Mono", "Roboto Mono",
+                    "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
+                    "Fira Code", "Droid Sans Mono", Consolas, monospace;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                background: var(--bg);
+                color: var(--text);
+            }
+
+            body {
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+                padding-bottom: 60px;
+            }
+
+            /* Main content area */
+            .hero {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+
+            .stack {
+                width: 100%;
+                max-width: 980px;
+                display: grid;
+                gap: 12px;
+            }
+
+            /* Editor window */
+            .editor {
+                border-radius: 14px;
+                background: linear-gradient(180deg, #101823, #0c1219);
+                box-shadow:
+                    0 20px 60px rgba(0, 0, 0, 0.45),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                overflow: hidden;
+            }
+
+            .editor-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 12px 16px;
+                background: linear-gradient(180deg, #1a2332, #151d28);
+                border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+            }
+
+            .dot {
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #ff5f56;
+                position: relative;
+                flex-shrink: 0;
+            }
+
+            .dot::after {
+                content: "";
+                position: absolute;
+                left: 20px;
+                top: 0;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #ffbd2e;
+            }
+
+            .dot::before {
+                content: "";
+                position: absolute;
+                left: 40px;
+                top: 0;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #27c93f;
+            }
+
+            .editor-title {
+                color: var(--muted);
+                font:
+                    500 13px/1.2 system-ui,
+                    -apple-system,
+                    Segoe UI,
+                    Roboto,
+                    Arial,
+                    sans-serif;
+                opacity: 0.85;
+                margin-left: 50px;
+            }
+
+            .editor-content {
+                padding: 20px 24px;
+                height: 500px;
+                overflow-y: auto;
+            }
+
+            /* Terminal window */
+            .terminal {
+                border-radius: 14px;
+                background: linear-gradient(180deg, #0b121a, #0a1016);
+                box-shadow:
+                    0 20px 60px rgba(0, 0, 0, 0.45),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                padding: 18px 22px;
+                height: 126px;
+                overflow-y: auto;
+            }
+
+            .term-title {
+                font:
+                    600 12px/1 system-ui,
+                    -apple-system,
+                    Segoe UI,
+                    Roboto,
+                    Arial,
+                    sans-serif;
+                color: var(--muted);
+                margin-bottom: 12px;
+                letter-spacing: 0.3px;
+                text-transform: uppercase;
+            }
+
+            /* Code styling */
+            pre {
+                margin: 0;
+                font-family: var(--mono);
+                font-size: 18px;
+                line-height: 1.5;
+                white-space: pre;
+            }
+
+            .line {
+                display: block;
+            }
+
+            .caret {
+                display: inline-block;
+                width: 2px;
+                height: 1em;
+                vertical-align: -0.2em;
+                background: var(--caret);
+                margin-left: 2px;
+                animation: blink 1s step-end infinite;
+            }
+
+            @keyframes blink {
+                50% {
+                    opacity: 0;
+                }
+            }
+
+            /* Syntax highlighting */
+            .kw {
+                color: #d2a8ff;
+            }
+            .name {
+                color: #79c0ff;
+            }
+            .mod {
+                color: #a5d6ff;
+            }
+            .attr {
+                color: #91e6b3;
+            }
+            .str {
+                color: #a6e22e;
+            }
+            .param {
+                color: #ffdf88;
+            }
+            .bool {
+                color: #ffae7d;
+            }
+
+            .output {
+                color: #c8e6ff;
+                margin-top: 4px;
+            }
+
+            /* Footer - fixed at bottom */
+            footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                background: var(--panel);
+                padding: 14px 18px;
+                color: var(--muted);
+                font:
+                    500 13px/1.5 system-ui,
+                    -apple-system,
+                    Segoe UI,
+                    Roboto,
+                    Arial,
+                    sans-serif;
+                z-index: 100;
+            }
+
+            .footwrap {
+                max-width: 1080px;
+                margin: 0 auto;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                justify-content: center;
+            }
+
+            footer a {
+                color: var(--muted);
+                text-decoration: none;
+                padding: 6px 8px;
+                border-radius: 6px;
+                transition: all 0.2s ease;
+            }
+
+            footer a:hover {
+                color: #cbd7e3;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            /* Mobile optimizations */
+            @media (max-width: 768px) {
+                body {
+                    padding-bottom: 100px;
+                }
+
+                .hero {
+                    padding: 16px;
+                    align-items: flex-start;
+                    padding-top: 24px;
+                }
+
+                .stack {
+                    gap: 10px;
+                }
+
+                .editor-header {
+                    padding: 10px 14px;
+                }
+
+                .dot {
+                    width: 10px;
+                    height: 10px;
+                }
+
+                .dot::after,
+                .dot::before {
+                    width: 10px;
+                    height: 10px;
+                }
+
+                .dot::after {
+                    left: 16px;
+                }
+
+                .dot::before {
+                    left: 32px;
+                }
+
+                .editor-title {
+                    font-size: 12px;
+                    margin-left: 42px;
+                }
+
+                .editor-content {
+                    padding: 16px 18px;
+                    height: 400px;
+                }
+
+                .terminal {
+                    padding: 14px 18px;
+                    height: 105px;
+                }
+
+                pre {
+                    font-size: 14px;
+                    line-height: 1.4;
+                    white-space: pre-wrap;
+                    word-break: break-word;
+                    overflow-wrap: anywhere;
+                }
+
+                .term-title {
+                    font-size: 11px;
+                    margin-bottom: 10px;
+                }
+
+                footer {
+                    padding: 10px 12px;
+                    font-size: 12px;
+                }
+
+                .footwrap {
+                    gap: 6px;
+                }
+
+                footer a {
+                    padding: 4px 6px;
+                }
+            }
+
+            /* Desktop - ensure centered layout with padding */
+            @media (min-width: 769px) {
+                .hero {
+                    padding: 40px 24px;
+                }
+
+                .editor-content {
+                    height: 674px;
+                }
+
+                .terminal {
+                    height: 151px;
+                }
+
+                pre {
+                    font-size: 20px;
+                    line-height: 1.6;
+                }
+            }
+
+            /* Reduced motion support */
+            @media (prefers-reduced-motion: reduce) {
+                .caret {
+                    display: none;
+                }
+                * {
+                    animation-duration: 0.01ms !important;
+                    animation-iteration-count: 1 !important;
+                    transition-duration: 0.01ms !important;
+                }
+            }
+
+            /* Custom scrollbar for editor */
+            .editor-content::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .editor-content::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.2);
+            }
+
+            .editor-content::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 4px;
+            }
+
+            .editor-content::-webkit-scrollbar-thumb:hover {
+                background: rgba(255, 255, 255, 0.15);
+            }
+        </style>
+    </head>
+    <body>
+        <main class="hero">
+            <div class="stack">
+                <!-- Editor Window -->
+                <div class="editor" role="region" aria-label="Code editor">
+                    <div class="editor-header">
+                        <span class="dot" aria-hidden="true"></span>
+                        <span class="editor-title">~/vcraft.sg</span>
+                    </div>
+                    <div class="editor-content">
+                        <pre id="code" aria-live="polite"></pre>
+                    </div>
+                </div>
+
+                <!-- Terminal Window -->
+                <div
+                    class="terminal"
+                    role="region"
+                    aria-label="Terminal output"
+                >
+                    <div class="term-title">terminal</div>
+                    <pre id="term" aria-live="polite"></pre>
+                </div>
+            </div>
+        </main>
+
+        <footer role="contentinfo">
+            <div class="footwrap">
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="/cookies">Cookies Policy</a>
+                <a href="/data-deletion">Data Deletion</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </footer>
+
+        <script>
+            (function () {
+                "use strict";
+
+                // Configuration
+                const CONFIG = {
+                    editorLines: [
+                        "def vcraft():",
+                        "    import creativity",
+                        "    import craftsmanship",
+                        "    import technology",
+                        "    import curiosity",
+                        "    from humanity import empathy",
+                        "",
+                        '    delete("the_box")',
+                        '    build("solutions", scalable=True, human_centered=True)',
+                        "    return impact",
+                    ],
+                    promptText: ">>> vcraft()",
+                    outputText: '"From 🇸🇬 to 🌏"',
+                    typeSpeed: 22,
+                    linePause: 260,
+                    promptSpeed: 26,
+                    afterPromptPause: 300,
+                };
+
+                // Check for reduced motion preference
+                const reduceMotion = window.matchMedia(
+                    "(prefers-reduced-motion: reduce)",
+                ).matches;
+
+                // Cache DOM elements
+                const codeEl = document.getElementById("code");
+                const termEl = document.getElementById("term");
+
+                // Utility: sleep function
+                function sleep(ms) {
+                    return new Promise((resolve) => setTimeout(resolve, ms));
+                }
+
+                // Syntax highlighter for Python code
+                function highlightPython(line) {
+                    // Escape HTML to prevent user code from creating accidental tags
+                    let text = line
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;");
+
+                    // Highlight strings, booleans, and params first so later tag insertion doesn't corrupt attributes
+                    text = text
+                        .replace(/"([^"]*)"/g, '<span class="str">"$1"</span>')
+                        .replace(
+                            /\b(True|False)\b/g,
+                            '<span class="bool">$1</span>',
+                        )
+                        .replace(
+                            /\b(scalable|human_centered)\b/g,
+                            '<span class="param">$1</span>',
+                        );
+
+                    // Then handle line-anchored keywords
+                    text = text
+                        .replace(
+                            /^(\s*)(def)\s+([A-Za-z_][A-Za-z_0-9]*)\s*\(\)\:/,
+                            function (_, spaces, keyword, funcName) {
+                                return `${spaces}<span class="kw">${keyword}</span> <span class="name">${funcName}</span>():`;
+                            },
+                        )
+                        .replace(
+                            /^(\s*)(from)\s+([A-Za-z_][A-Za-z_0-9]*)\s+(import)\s+([A-Za-z_][A-Za-z_0-9]*)/,
+                            function (
+                                _,
+                                spaces,
+                                from,
+                                moduleName,
+                                imp,
+                                attrName,
+                            ) {
+                                return `${spaces}<span class="kw">${from}</span> <span class="mod">${moduleName}</span> <span class="kw">${imp}</span> <span class="attr">${attrName}</span>`;
+                            },
+                        )
+                        .replace(
+                            /^(\s*)(import)\s+([A-Za-z_][A-Za-z_0-9]*)/,
+                            function (_, spaces, keyword, moduleName) {
+                                return `${spaces}<span class="kw">${keyword}</span> <span class="mod">${moduleName}</span>`;
+                            },
+                        )
+                        .replace(
+                            /^(\s*)(return)\s+([A-Za-z_][A-Za-z_0-9]*)/,
+                            function (_, spaces, keyword, varName) {
+                                return `${spaces}<span class="kw">${keyword}</span> <span class="attr">${varName}</span>`;
+                            },
+                        );
+
+                    return text;
+                }
+
+                // Type text character by character
+                async function typeText(container, text, speed) {
+                    const line = document.createElement("span");
+                    line.className = "line";
+                    container.appendChild(line);
+
+                    const caret = document.createElement("span");
+                    caret.className = "caret";
+                    line.appendChild(caret);
+
+                    for (let i = 0; i < text.length; i++) {
+                        if (!reduceMotion) {
+                            await sleep(speed);
+                        }
+                        caret.insertAdjacentText("beforebegin", text[i]);
+                    }
+
+                    caret.remove();
+                }
+
+                // Animate the editor code
+                async function animateEditor() {
+                    for (const rawLine of CONFIG.editorLines) {
+                        const highlighted = highlightPython(rawLine);
+                        const plainText = rawLine;
+
+                        const lineWrapper = document.createElement("span");
+                        lineWrapper.className = "line";
+                        codeEl.appendChild(lineWrapper);
+
+                        const caret = document.createElement("span");
+                        caret.className = "caret";
+                        lineWrapper.appendChild(caret);
+
+                        // Type plain text
+                        for (let i = 0; i < plainText.length; i++) {
+                            if (!reduceMotion) {
+                                await sleep(CONFIG.typeSpeed);
+                            }
+                            caret.insertAdjacentText(
+                                "beforebegin",
+                                plainText[i],
+                            );
+                        }
+
+                        // Atomically swap highlighted content using a DocumentFragment
+                        const temp = document.createElement("div");
+                        temp.innerHTML = highlighted;
+                        const frag = document.createDocumentFragment();
+                        while (temp.firstChild) {
+                            frag.appendChild(temp.firstChild);
+                        }
+                        lineWrapper.replaceChildren(frag);
+
+                        if (!reduceMotion) {
+                            await sleep(CONFIG.linePause);
+                        }
+
+                        // Add line break
+                        codeEl.appendChild(document.createTextNode("\n"));
+                    }
+                }
+
+                // Animate the terminal output
+                async function animateTerminal() {
+                    // Type prompt
+                    const promptLine = document.createElement("span");
+                    termEl.appendChild(promptLine);
+
+                    await typeText(
+                        promptLine,
+                        CONFIG.promptText,
+                        CONFIG.promptSpeed,
+                    );
+
+                    if (!reduceMotion) {
+                        await sleep(CONFIG.afterPromptPause);
+                    }
+
+                    // Show output
+                    const outputLine = document.createElement("span");
+                    outputLine.className = "output";
+                    outputLine.textContent = CONFIG.outputText;
+                    termEl.appendChild(document.createTextNode("\n"));
+                    termEl.appendChild(outputLine);
+                }
+
+                // Main animation sequence
+                async function runAnimation() {
+                    if (reduceMotion) {
+                        // Instant render for accessibility
+                        codeEl.innerHTML = CONFIG.editorLines
+                            .map(highlightPython)
+                            .join("\n");
+                        termEl.textContent = `${CONFIG.promptText}\n${CONFIG.outputText}`;
+                        return;
+                    }
+
+                    await animateEditor();
+                    await animateTerminal();
+                }
+
+                // Start the animation
+                runAnimation();
+            })();
+        </script>
+
+        <noscript>
+            <style>
+                .caret {
+                    display: none;
+                }
+                .hero {
+                    padding-top: 40px;
+                }
+            </style>
+        </noscript>
+    </body>
+</html>

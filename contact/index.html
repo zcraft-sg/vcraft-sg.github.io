@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Contact | vcraft.sg</title>
+        <style>
+            :root {
+                --bg: #0b0f14;
+                --text: #e6edf3;
+                --muted: #9fb0c0;
+                --accent: #86e1ff;
+            }
+
+            body {
+                margin: 0;
+                background: var(--bg);
+                color: var(--text);
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    Segoe UI,
+                    Roboto,
+                    Arial,
+                    sans-serif;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            main {
+                flex: 1;
+                max-width: 720px;
+                margin: 0 auto;
+                padding: 48px 24px 32px;
+            }
+
+            h1 {
+                margin-top: 0;
+                margin-bottom: 24px;
+                font-size: clamp(32px, 6vw, 40px);
+            }
+
+            p,
+            li {
+                line-height: 1.6;
+                color: var(--muted);
+            }
+
+            a {
+                color: var(--accent);
+                text-decoration: none;
+            }
+
+            a:hover {
+                color: #bde8ff;
+            }
+
+            footer {
+                padding: 24px 16px;
+                text-align: center;
+                font-size: 14px;
+                color: var(--muted);
+            }
+
+            .contact-card {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 12px;
+                padding: 24px;
+                margin-top: 24px;
+            }
+
+            .contact-card h2 {
+                margin-top: 0;
+                margin-bottom: 16px;
+                font-size: clamp(22px, 4.5vw, 26px);
+                color: var(--text);
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h1>Contact Us</h1>
+            <p>
+                We are a Singapore-based team. Reach out with any project ideas,
+                partnership plans, or support needs, and we are happy to help.
+            </p>
+            <div class="contact-card">
+                <h2>Email</h2>
+                <p>
+                    <a href="mailto:root@vcraft.sg">root@vcraft.sg</a>
+                </p>
+                <p>We aim to reply within two business days.</p>
+            </div>
+
+            <div class="contact-card">
+                <h2>Working Hours</h2>
+                <p>Monday to Friday, 9am to 6pm (Singapore Time, UTC+8).</p>
+            </div>
+        </main>
+        <footer>
+            <a href="/">Back to home</a>
+        </footer>
+    </body>
+</html>
